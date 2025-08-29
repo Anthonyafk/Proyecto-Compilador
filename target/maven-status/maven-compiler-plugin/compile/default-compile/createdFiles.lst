@@ -1,0 +1,13 @@
+com/compiler/lexer/dfa/DFA.class
+com/compiler/lexer/regex/RegexParser.class
+com/compiler/lexer/NfaToDfaConverter.class
+com/compiler/lexer/regex/ShuntingYard.class
+com/compiler/lexer/DfaMinimizer$Pair.class
+com/compiler/lexer/NfaSimulator.class
+com/compiler/lexer/nfa/State.class
+com/compiler/Main.class
+com/compiler/lexer/nfa/NFA.class
+com/compiler/lexer/nfa/Transition.class
+com/compiler/lexer/dfa/DfaState.class
+com/compiler/lexer/DfaMinimizer.class
+com/compiler/lexer/DfaSimulator.class
