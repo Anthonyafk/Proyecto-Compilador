@@ -38,15 +38,14 @@ public class DfaSimulator {
      * @return True if the input is accepted by the DFA, false otherwise.
      */
     public boolean simulate(DFA dfa, String input) {
-       // TODO: Implement simulate
-       /*
-        Pseudocode:
-        1. Set currentState to DFA start state
-        2. For each character in input:
-            - Get next state using transition for character
-            - If no transition exists, return false
-        3. After processing all characters, return true if currentState is final
-       */
-       throw new UnsupportedOperationException("Not implemented");
+        var currentState = dfa.startState;
+        for (char symbol : input.toCharArray()) {
+            var nextState = currentState.getTransition(symbol);
+            if (nextState == null) {
+                return false; // No valid transition, reject input
+            }
+            currentState = nextState;
+        }
+        return currentState.isFinal(); // Accept if in a final state
     }
 }

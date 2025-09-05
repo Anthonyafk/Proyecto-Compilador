@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report-3.0.xsd" version="3.0" name="com.compiler.RegexTest" time="0.175" tests="70" errors="0" skipped="0" failures="0">
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report-3.0.xsd" version="3.0" name="com.compiler.RegexTest" time="0.171" tests="70" errors="0" skipped="0" failures="0">
   <properties>
     <property name="java.specification.version" value="21"/>
     <property name="sun.jnu.encoding" value="UTF-8"/>
@@ -12,7 +12,7 @@
     <property name="sun.java.launcher" value="SUN_STANDARD"/>
     <property name="user.country" value="US"/>
     <property name="sun.boot.library.path" value="/usr/lib/jvm/java-21-openjdk-amd64/lib"/>
-    <property name="sun.java.command" value="/home/abovewolf37845/Documents/Compiladores/Proyecto-Compilador/target/surefire/surefirebooter-20250828224917623_3.jar /home/abovewolf37845/Documents/Compiladores/Proyecto-Compilador/target/surefire 2025-08-28T22-49-17_487-jvmRun1 surefire-20250828224917623_1tmp surefire_0-20250828224917623_2tmp"/>
+    <property name="sun.java.command" value="/home/abovewolf37845/Documents/Compiladores/Proyecto-Compilador/target/surefire/surefirebooter-20250904131916997_3.jar /home/abovewolf37845/Documents/Compiladores/Proyecto-Compilador/target/surefire 2025-09-04T13-19-16_832-jvmRun1 surefire-20250904131916997_1tmp surefire_0-20250904131916997_2tmp"/>
     <property name="jdk.debug" value="release"/>
     <property name="surefire.test.class.path" value="/home/abovewolf37845/Documents/Compiladores/Proyecto-Compilador/target/test-classes:/home/abovewolf37845/Documents/Compiladores/Proyecto-Compilador/target/classes:/home/abovewolf37845/.m2/repository/org/junit/jupiter/junit-jupiter/5.9.3/junit-jupiter-5.9.3.jar:/home/abovewolf37845/.m2/repository/org/junit/jupiter/junit-jupiter-api/5.9.3/junit-jupiter-api-5.9.3.jar:/home/abovewolf37845/.m2/repository/org/opentest4j/opentest4j/1.2.0/opentest4j-1.2.0.jar:/home/abovewolf37845/.m2/repository/org/junit/platform/junit-platform-commons/1.9.3/junit-platform-commons-1.9.3.jar:/home/abovewolf37845/.m2/repository/org/apiguardian/apiguardian-api/1.1.2/apiguardian-api-1.1.2.jar:/home/abovewolf37845/.m2/repository/org/junit/jupiter/junit-jupiter-params/5.9.3/junit-jupiter-params-5.9.3.jar:/home/abovewolf37845/.m2/repository/org/junit/jupiter/junit-jupiter-engine/5.9.3/junit-jupiter-engine-5.9.3.jar:/home/abovewolf37845/.m2/repository/org/junit/platform/junit-platform-engine/1.9.3/junit-platform-engine-1.9.3.jar:"/>
     <property name="sun.cpu.endian" value="little"/>
@@ -27,13 +27,13 @@
     <property name="line.separator" value="&#10;"/>
     <property name="java.specification.name" value="Java Platform API Specification"/>
     <property name="java.vm.specification.vendor" value="Oracle Corporation"/>
-    <property name="surefire.real.class.path" value="/home/abovewolf37845/Documents/Compiladores/Proyecto-Compilador/target/surefire/surefirebooter-20250828224917623_3.jar"/>
+    <property name="surefire.real.class.path" value="/home/abovewolf37845/Documents/Compiladores/Proyecto-Compilador/target/surefire/surefirebooter-20250904131916997_3.jar"/>
     <property name="sun.management.compiler" value="HotSpot 64-Bit Tiered Compilers"/>
     <property name="java.runtime.version" value="21.0.8+9-Ubuntu-0ubuntu122.04.1"/>
     <property name="user.name" value="abovewolf37845"/>
     <property name="stdout.encoding" value="UTF-8"/>
     <property name="path.separator" value=":"/>
-    <property name="os.version" value="6.8.0-65-generic"/>
+    <property name="os.version" value="6.8.0-78-generic"/>
     <property name="java.runtime.name" value="OpenJDK Runtime Environment"/>
     <property name="file.encoding" value="UTF-8"/>
     <property name="java.vm.name" value="OpenJDK 64-Bit Server VM"/>
@@ -53,15 +53,15 @@
     <property name="sun.io.unicode.encoding" value="UnicodeLittle"/>
     <property name="java.class.version" value="65.0"/>
   </properties>
-  <testcase name="testConcatWithGroupUnion(String, boolean)[1]" classname="com.compiler.RegexTest" time="0.037"/>
+  <testcase name="testConcatWithGroupUnion(String, boolean)[1]" classname="com.compiler.RegexTest" time="0.036"/>
   <testcase name="testConcatWithGroupUnion(String, boolean)[2]" classname="com.compiler.RegexTest" time="0.001"/>
   <testcase name="testConcatWithGroupUnion(String, boolean)[3]" classname="com.compiler.RegexTest" time="0.001"/>
   <testcase name="testConcatWithGroupUnion(String, boolean)[4]" classname="com.compiler.RegexTest" time="0.001"/>
-  <testcase name="testConcatWithGroupUnion(String, boolean)[5]" classname="com.compiler.RegexTest" time="0"/>
+  <testcase name="testConcatWithGroupUnion(String, boolean)[5]" classname="com.compiler.RegexTest" time="0.001"/>
   <testcase name="testPlusOperator(String, boolean)[1]" classname="com.compiler.RegexTest" time="0.001"/>
   <testcase name="testPlusOperator(String, boolean)[2]" classname="com.compiler.RegexTest" time="0.001"/>
   <testcase name="testPlusOperator(String, boolean)[3]" classname="com.compiler.RegexTest" time="0.001"/>
-  <testcase name="testPlusOperator(String, boolean)[4]" classname="com.compiler.RegexTest" time="0"/>
+  <testcase name="testPlusOperator(String, boolean)[4]" classname="com.compiler.RegexTest" time="0.001"/>
   <testcase name="testPlusOperator(String, boolean)[5]" classname="com.compiler.RegexTest" time="0.001"/>
   <testcase name="testPrecedenceConcatOverUnion(String, boolean)[1]" classname="com.compiler.RegexTest" time="0.002"/>
   <testcase name="testPrecedenceConcatOverUnion(String, boolean)[2]" classname="com.compiler.RegexTest" time="0.001"/>
@@ -70,16 +70,16 @@
   <testcase name="testPrecedenceConcatOverUnion(String, boolean)[5]" classname="com.compiler.RegexTest" time="0.001"/>
   <testcase name="testPrecedenceKleeneOverConcat(String, boolean)[1]" classname="com.compiler.RegexTest" time="0.001"/>
   <testcase name="testPrecedenceKleeneOverConcat(String, boolean)[2]" classname="com.compiler.RegexTest" time="0.001"/>
-  <testcase name="testPrecedenceKleeneOverConcat(String, boolean)[3]" classname="com.compiler.RegexTest" time="0"/>
-  <testcase name="testPrecedenceKleeneOverConcat(String, boolean)[4]" classname="com.compiler.RegexTest" time="0"/>
-  <testcase name="testPrecedenceKleeneOverConcat(String, boolean)[5]" classname="com.compiler.RegexTest" time="0.001"/>
-  <testcase name="testPrecedenceKleeneOverConcat(String, boolean)[6]" classname="com.compiler.RegexTest" time="0.001"/>
+  <testcase name="testPrecedenceKleeneOverConcat(String, boolean)[3]" classname="com.compiler.RegexTest" time="0.001"/>
+  <testcase name="testPrecedenceKleeneOverConcat(String, boolean)[4]" classname="com.compiler.RegexTest" time="0.001"/>
+  <testcase name="testPrecedenceKleeneOverConcat(String, boolean)[5]" classname="com.compiler.RegexTest" time="0"/>
+  <testcase name="testPrecedenceKleeneOverConcat(String, boolean)[6]" classname="com.compiler.RegexTest" time="0"/>
   <testcase name="testPrecedenceKleeneOverConcat(String, boolean)[7]" classname="com.compiler.RegexTest" time="0.001"/>
   <testcase name="testComplexNesting(String, boolean)[1]" classname="com.compiler.RegexTest" time="0.001"/>
   <testcase name="testComplexNesting(String, boolean)[2]" classname="com.compiler.RegexTest" time="0.001"/>
-  <testcase name="testComplexNesting(String, boolean)[3]" classname="com.compiler.RegexTest" time="0.002"/>
-  <testcase name="testComplexNesting(String, boolean)[4]" classname="com.compiler.RegexTest" time="0"/>
-  <testcase name="testComplexNesting(String, boolean)[5]" classname="com.compiler.RegexTest" time="0"/>
+  <testcase name="testComplexNesting(String, boolean)[3]" classname="com.compiler.RegexTest" time="0.001"/>
+  <testcase name="testComplexNesting(String, boolean)[4]" classname="com.compiler.RegexTest" time="0.001"/>
+  <testcase name="testComplexNesting(String, boolean)[5]" classname="com.compiler.RegexTest" time="0.001"/>
   <testcase name="testComplexNesting(String, boolean)[6]" classname="com.compiler.RegexTest" time="0"/>
   <testcase name="testComplexNesting(String, boolean)[7]" classname="com.compiler.RegexTest" time="0"/>
   <testcase name="testComplexNesting(String, boolean)[8]" classname="com.compiler.RegexTest" time="0"/>
@@ -87,40 +87,40 @@
   <testcase name="testContainsAtLeastOneA(String, boolean)[2]" classname="com.compiler.RegexTest" time="0.001"/>
   <testcase name="testContainsAtLeastOneA(String, boolean)[3]" classname="com.compiler.RegexTest" time="0"/>
   <testcase name="testContainsAtLeastOneA(String, boolean)[4]" classname="com.compiler.RegexTest" time="0"/>
-  <testcase name="testContainsAtLeastOneA(String, boolean)[5]" classname="com.compiler.RegexTest" time="0.001"/>
-  <testcase name="testContainsAtLeastOneA(String, boolean)[6]" classname="com.compiler.RegexTest" time="0.001"/>
+  <testcase name="testContainsAtLeastOneA(String, boolean)[5]" classname="com.compiler.RegexTest" time="0"/>
+  <testcase name="testContainsAtLeastOneA(String, boolean)[6]" classname="com.compiler.RegexTest" time="0"/>
   <testcase name="testContainsAtLeastOneA(String, boolean)[7]" classname="com.compiler.RegexTest" time="0.001"/>
   <testcase name="testContainsAtLeastOneA(String, boolean)[8]" classname="com.compiler.RegexTest" time="0.001"/>
   <testcase name="testContainsAtLeastOneA(String, boolean)[9]" classname="com.compiler.RegexTest" time="0.001"/>
   <testcase name="testContainsAtLeastOneA(String, boolean)[10]" classname="com.compiler.RegexTest" time="0.001"/>
   <testcase name="testGroupingKleene(String, boolean)[1]" classname="com.compiler.RegexTest" time="0.001"/>
-  <testcase name="testGroupingKleene(String, boolean)[2]" classname="com.compiler.RegexTest" time="0.001"/>
-  <testcase name="testGroupingKleene(String, boolean)[3]" classname="com.compiler.RegexTest" time="0"/>
-  <testcase name="testGroupingKleene(String, boolean)[4]" classname="com.compiler.RegexTest" time="0"/>
-  <testcase name="testGroupingKleene(String, boolean)[5]" classname="com.compiler.RegexTest" time="0"/>
+  <testcase name="testGroupingKleene(String, boolean)[2]" classname="com.compiler.RegexTest" time="0"/>
+  <testcase name="testGroupingKleene(String, boolean)[3]" classname="com.compiler.RegexTest" time="0.001"/>
+  <testcase name="testGroupingKleene(String, boolean)[4]" classname="com.compiler.RegexTest" time="0.001"/>
+  <testcase name="testGroupingKleene(String, boolean)[5]" classname="com.compiler.RegexTest" time="0.001"/>
   <testcase name="testGroupingKleene(String, boolean)[6]" classname="com.compiler.RegexTest" time="0"/>
   <testcase name="testGroupingKleene(String, boolean)[7]" classname="com.compiler.RegexTest" time="0"/>
   <testcase name="testGroupingKleene(String, boolean)[8]" classname="com.compiler.RegexTest" time="0"/>
   <testcase name="testGroupingKleene(String, boolean)[9]" classname="com.compiler.RegexTest" time="0"/>
   <testcase name="testGroupingKleene(String, boolean)[10]" classname="com.compiler.RegexTest" time="0.001"/>
   <testcase name="testGroupingKleene(String, boolean)[11]" classname="com.compiler.RegexTest" time="0.001"/>
-  <testcase name="testUnionOperator(String, boolean)[1]" classname="com.compiler.RegexTest" time="0"/>
-  <testcase name="testUnionOperator(String, boolean)[2]" classname="com.compiler.RegexTest" time="0"/>
+  <testcase name="testUnionOperator(String, boolean)[1]" classname="com.compiler.RegexTest" time="0.001"/>
+  <testcase name="testUnionOperator(String, boolean)[2]" classname="com.compiler.RegexTest" time="0.001"/>
   <testcase name="testUnionOperator(String, boolean)[3]" classname="com.compiler.RegexTest" time="0.001"/>
-  <testcase name="testUnionOperator(String, boolean)[4]" classname="com.compiler.RegexTest" time="0.001"/>
+  <testcase name="testUnionOperator(String, boolean)[4]" classname="com.compiler.RegexTest" time="0"/>
   <testcase name="testUnionOperator(String, boolean)[5]" classname="com.compiler.RegexTest" time="0"/>
-  <testcase name="testOptionalOperator(String, boolean)[1]" classname="com.compiler.RegexTest" time="0.001"/>
-  <testcase name="testOptionalOperator(String, boolean)[2]" classname="com.compiler.RegexTest" time="0.001"/>
+  <testcase name="testOptionalOperator(String, boolean)[1]" classname="com.compiler.RegexTest" time="0"/>
+  <testcase name="testOptionalOperator(String, boolean)[2]" classname="com.compiler.RegexTest" time="0"/>
   <testcase name="testOptionalOperator(String, boolean)[3]" classname="com.compiler.RegexTest" time="0"/>
-  <testcase name="testOptionalOperator(String, boolean)[4]" classname="com.compiler.RegexTest" time="0"/>
+  <testcase name="testOptionalOperator(String, boolean)[4]" classname="com.compiler.RegexTest" time="0.001"/>
   <testcase name="testNestedKleene(String, boolean)[1]" classname="com.compiler.RegexTest" time="0.001"/>
   <testcase name="testNestedKleene(String, boolean)[2]" classname="com.compiler.RegexTest" time="0"/>
-  <testcase name="testNestedKleene(String, boolean)[3]" classname="com.compiler.RegexTest" time="0"/>
-  <testcase name="testNestedKleene(String, boolean)[4]" classname="com.compiler.RegexTest" time="0"/>
+  <testcase name="testNestedKleene(String, boolean)[3]" classname="com.compiler.RegexTest" time="0.001"/>
+  <testcase name="testNestedKleene(String, boolean)[4]" classname="com.compiler.RegexTest" time="0.001"/>
   <testcase name="testOptionalInsideConcat(String, boolean)[1]" classname="com.compiler.RegexTest" time="0.001"/>
   <testcase name="testOptionalInsideConcat(String, boolean)[2]" classname="com.compiler.RegexTest" time="0.001"/>
   <testcase name="testOptionalInsideConcat(String, boolean)[3]" classname="com.compiler.RegexTest" time="0.001"/>
   <testcase name="testOptionalInsideConcat(String, boolean)[4]" classname="com.compiler.RegexTest" time="0.001"/>
-  <testcase name="testOptionalInsideConcat(String, boolean)[5]" classname="com.compiler.RegexTest" time="0.001"/>
+  <testcase name="testOptionalInsideConcat(String, boolean)[5]" classname="com.compiler.RegexTest" time="0"/>
   <testcase name="testOptionalInsideConcat(String, boolean)[6]" classname="com.compiler.RegexTest" time="0"/>
 </testsuite>

@@ -38,6 +38,13 @@ public class NfaToDfaConverter {
         // Calcular cierre epsilon del estado inicial
         Set<State> inicioCerradura = epsilonClosure(Set.of(nfa.startState));
         DfaState inicioDFA = new DfaState(inicioCerradura);
+        // Marcar como final si corresponde
+        for (State nfaState : inicioCerradura) {
+            if (nfaState.isFinal) {
+                inicioDFA.setFinal(true);
+                break;
+            }
+        }
         estadosDFA.add(inicioDFA);
         cola.add(inicioDFA);
 
@@ -47,11 +54,18 @@ public class NfaToDfaConverter {
             for (char symbol : alphabet) {
                 Set<State> moverResultado = move(current.nfaStates, symbol);
                 Set<State> cerradura = epsilonClosure(moverResultado);
-
+            
                 if (!cerradura.isEmpty()) {
                     DfaState existing = findDfaState(estadosDFA, cerradura);
                     if (existing == null) {
                         existing = new DfaState(cerradura);
+                        // Marcar como final si corresponde
+                        for (State nfaState : cerradura) {
+                            if (nfaState.isFinal) {
+                                existing.setFinal(true);
+                                break;
+                            }
+                        }
                         estadosDFA.add(existing);
                         cola.add(existing);
                     }
@@ -60,8 +74,7 @@ public class NfaToDfaConverter {
             }
         }
         return new DFA(inicioDFA, estadosDFA);
-    }	
-	
+    }
 
 	/**
 	 * Computes the epsilon-closure of a set of NFA states.
