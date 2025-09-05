@@ -90,6 +90,7 @@ public class RegexParser {
         NFA interno = stack.pop();
         State estadoInicial = new State();
         State estadoFinal = new State();
+        estadoFinal.isFinal = true;
 
         // Zero occurrences
         estadoInicial.transitions.add(new Transition(null, estadoFinal));
@@ -114,6 +115,7 @@ public class RegexParser {
         NFA interno = stack.pop();
         State estadoInicial = new State();
         State estadoFinal = new State();
+        estadoFinal.isFinal = true;
 
         // First occurrence
         estadoInicial.transitions.add(new Transition(null, interno.startState));
@@ -173,6 +175,7 @@ public class RegexParser {
 
         State estadoInicial = new State();
         State estadoFinal = new State();
+        estadoFinal.isFinal = true;
 
         // Empieza merge
         estadoInicial.transitions.add(new Transition(null, izquierdo.startState));
@@ -200,6 +203,7 @@ public class RegexParser {
         NFA interno = stack.pop();
         State estadoInicial = new State();
         State estadoFinal = new State();
+        estadoFinal.isFinal = true;
 
         // cero repeticiones
         estadoInicial.transitions.add(new Transition(null, estadoFinal));
