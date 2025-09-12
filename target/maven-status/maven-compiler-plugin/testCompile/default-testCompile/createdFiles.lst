@@ -1,1 +1,3 @@
 com/compiler/RegexTest.class
+com/compiler/DfaMinimizationTest.class
+com/compiler/TokenizerTest.class
