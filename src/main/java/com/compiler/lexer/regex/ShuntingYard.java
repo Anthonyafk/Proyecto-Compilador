@@ -1,129 +1,108 @@
 package com.compiler.lexer.regex;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Stack;
 
 /**
- * Utility class for regular expression parsing using the Shunting Yard
- * algorithm.
+ * Utility class for regular expression parsing using the Shunting Yard algorithm.
  * <p>
- * Provides methods to preprocess regular expressions by inserting explicit
- * concatenation operators, and to convert infix regular expressions to postfix
- * notation for easier parsing and NFA construction.
+ * Provides methods to preprocess regular expressions by inserting explicit concatenation operators,
+ * and to convert infix regular expressions to postfix notation for easier parsing and NFA construction.
  */
 /**
- * Utility class for regular expression parsing using the Shunting Yard
- * algorithm.
+ * Utility class for regular expression parsing using the Shunting Yard algorithm.
  */
 public class ShuntingYard {
-
     /**
      * Default constructor for ShuntingYard.
      */
-    public ShuntingYard() {
-        // TODO: Implement constructor if needed
-    }
-
+    public ShuntingYard() {}
     /**
-     * Inserts the explicit concatenation operator ('·') into the regular
-     * expression according to standard rules. This makes implicit
-     * concatenations explicit, simplifying later parsing.
+     * Inserts the explicit concatenation operator ('·') into the regular expression according to standard rules.
+     * This makes implicit concatenations explicit, simplifying later parsing.
      *
      * @param regex Input regular expression (may have implicit concatenation).
      * @return Regular expression with explicit concatenation operators.
      */
     public static String insertConcatenationOperator(String regex) {
-        if (regex == null || regex.isEmpty()) return regex;
+        StringBuilder output = new StringBuilder();
 
-        StringBuilder salida = new StringBuilder();
         for (int i = 0; i < regex.length(); i++) {
-            char c1 = regex.charAt(i);
-            salida.append(c1);
+            char currentChar = regex.charAt(i);
+            output.append(currentChar);
 
-            if (i + 1 < regex.length()) {
-                char c2 = regex.charAt(i + 1);
+            // Do not insert at the end of the string
+            if (i + 1 >= regex.length()) {
+                break;
+            }
 
-                boolean leftCanConcat = isOperand(c1) || c1 == ')' || c1 == '*' || c1 == '+' || c1 == '?';
-                boolean rightCanConcat = isOperand(c2) || c2 == '(';
+            char nextChar = regex.charAt(i + 1);
 
-                if (leftCanConcat && rightCanConcat) {
-                    salida.append('·');
-                }
+            boolean isCurrentOperand = isOperand(currentChar) || currentChar == '*' || currentChar == '?' || currentChar == '+' || currentChar == ')';
+            boolean isNextOperand = isOperand(nextChar) || nextChar == '(';
+
+            if (isCurrentOperand && isNextOperand) {
+                output.append('·');
             }
         }
-        return salida.toString();
+
+        return output.toString();
     }
 
     /**
-     * Determines if the given character is an operand (not an operator or
-     * parenthesis).
+     * Determines if the given character is an operand (not an operator or parenthesis).
      *
      * @param c Character to evaluate.
      * @return true if it is an operand, false otherwise.
      */
     private static boolean isOperand(char c) {
-            return !String.valueOf(c).matches("[|*?+()·]");
+        return c != '|' && c != '*' && c != '?' && c != '+' && c != '(' && c != ')' && c != '·';
     }
 
     /**
-     * Converts an infix regular expression to postfix notation using the
-     * Shunting Yard algorithm. This is useful for constructing NFAs from
-     * regular expressions.
+     * Converts an infix regular expression to postfix notation using the Shunting Yard algorithm.
+     * This is useful for constructing NFAs from regular expressions.
      *
      * @param infixRegex Regular expression in infix notation.
      * @return Regular expression in postfix notation.
      */
     public static String toPostfix(String infixRegex) {
-        if (infixRegex == null) return "";
+        java.util.Map<Character, Integer> precedence = new java.util.HashMap<>();
+        precedence.put('|', 1);
+        precedence.put('·', 2);
+        precedence.put('?', 3);
+        precedence.put('*', 3);
+        precedence.put('+', 3);
 
-        String expReg = insertConcatenationOperator(infixRegex);
+        StringBuilder output = new StringBuilder();
+        java.util.Stack<Character> operatorStack = new java.util.Stack<>();
 
-        // Prioridades
-        Map<Character, Integer> prec = new HashMap<>();
-        prec.put('|', 1);
-        prec.put('·', 2);
-        prec.put('*', 3);
-        prec.put('+', 3);
-        prec.put('?', 3);
+        String preprocessedRegex = insertConcatenationOperator(infixRegex);
 
-        StringBuilder salida = new StringBuilder();
-        Stack<Character> pila = new Stack<>();
-
-        for (int i = 0; i < expReg.length(); i++) {
-            char c = expReg.charAt(i);
+        for (int i = 0; i < preprocessedRegex.length(); i++) {
+            char c = preprocessedRegex.charAt(i);
 
             if (isOperand(c)) {
-                salida.append(c);
+                output.append(c);
             } else if (c == '(') {
-                pila.push(c);
+                operatorStack.push(c);
             } else if (c == ')') {
-                while (!pila.isEmpty() && pila.peek() != '(') {
-                    salida.append(pila.pop());
+                while (!operatorStack.isEmpty() && operatorStack.peek() != '(') {
+                    output.append(operatorStack.pop());
                 }
-                if (!pila.isEmpty() && pila.peek() == '(') {
-                    pila.pop(); // descartar '('
-                } else {
-                    throw new IllegalArgumentException("')' no coincide en la expresión regular");
+                if (!operatorStack.isEmpty()) {
+                    operatorStack.pop(); // Discard '('
                 }
-            } else {
-                // c es un operador: |, ·, *, +, ?
-                while (!pila.isEmpty()
-                        && pila.peek() != '('
-                        && prec.getOrDefault(pila.peek(), 0) >= prec.getOrDefault(c, 0)) {
-                    salida.append(pila.pop());
+            } else { // Is an operator
+                while (!operatorStack.isEmpty() && operatorStack.peek() != '('
+                        && precedence.getOrDefault(operatorStack.peek(), 0) >= precedence.getOrDefault(c, 0)) {
+                    output.append(operatorStack.pop());
                 }
-                pila.push(c);
+                operatorStack.push(c);
             }
         }
 
-        while (!pila.isEmpty()) {
-            char top = pila.pop();
-            if (top == '(' || top == ')') {
-                throw new IllegalArgumentException("'(' no coincidente en la expresión regular");
-            }
-            salida.append(top);
+        while (!operatorStack.isEmpty()) {
+            output.append(operatorStack.pop());
         }
 
-        return salida.toString();
+        return output.toString();
     }
 }

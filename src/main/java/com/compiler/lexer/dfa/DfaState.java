@@ -1,8 +1,8 @@
 package com.compiler.lexer.dfa;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.HashMap;
 
 import com.compiler.lexer.nfa.State;
 
@@ -14,6 +14,10 @@ import com.compiler.lexer.nfa.State;
  * Provides methods for managing transitions, checking finality, and equality based on NFA state sets.
  */
 public class DfaState {
+    /**
+     * El nombre del tipo de token reconocido si este estado es final. Puede ser null o una lista si hay conflicto.
+     */
+    public String tokenTypeName;
     /**
      * Returns all transitions from this state.
      * @return Map of input symbols to destination DFA states.
@@ -44,10 +48,11 @@ public class DfaState {
      * @param nfaStates The set of NFA states that this DFA state represents.
      */
     public DfaState(Set<State> nfaStates) {
-        this.id = nextId++;
-        this.nfaStates = nfaStates;
-        this.isFinal = false;
-        this.transitions = new HashMap<>();
+    this.id = nextId++;
+    this.nfaStates = nfaStates;
+    this.isFinal = false; // This will be determined after all states are created
+    this.transitions = new HashMap<>();
+    this.tokenTypeName = null;
     }
 
     /**
@@ -56,7 +61,7 @@ public class DfaState {
      * @param toState The destination DFA state.
      */
     public void addTransition(Character symbol, DfaState toState) {
-        transitions.put(symbol, toState);
+        this.transitions.put(symbol, toState);
     }
 
     /**
@@ -67,7 +72,7 @@ public class DfaState {
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
-        if (!(obj instanceof DfaState)) return false;
+        if (obj == null || getClass() != obj.getClass()) return false;
         DfaState other = (DfaState) obj;
         return nfaStates.equals(other.nfaStates);
     }
@@ -87,7 +92,7 @@ public class DfaState {
      */
     @Override
     public String toString() {
-        return "DfaState{" + "id=" + id + ", nfaStates=" + nfaStates + ", isFinal=" + isFinal + ", transitions=" + transitions +'}';
+        return "D" + id + " " + (isFinal ? "(Final)" : "");
     }
 
     /**

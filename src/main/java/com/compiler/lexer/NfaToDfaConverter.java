@@ -1,10 +1,18 @@
 package com.compiler.lexer;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
+import java.util.Set;
+import java.util.Stack;
+
 import com.compiler.lexer.dfa.DFA;
 import com.compiler.lexer.dfa.DfaState;
 import com.compiler.lexer.nfa.NFA;
 import com.compiler.lexer.nfa.State;
-import java.util.*;
 
 /**
  * NfaToDfaConverter
@@ -19,9 +27,7 @@ public class NfaToDfaConverter {
 	/**
 	 * Default constructor for NfaToDfaConverter.
 	 */
-		public NfaToDfaConverter() {
-			// TODO: Implement constructor if needed
-		}
+	public NfaToDfaConverter() {}
 
 	/**
 	 * Converts an NFA to a DFA using the subset construction algorithm.
@@ -32,49 +38,51 @@ public class NfaToDfaConverter {
 	 * @return The resulting DFA
 	 */
 	public static DFA convertNfaToDfa(NFA nfa, Set<Character> alphabet) {
-	List<DfaState> estadosDFA = new ArrayList<>();
-        Queue<DfaState> cola = new LinkedList<>();
+		List<DfaState> dfaStates = new ArrayList<>();
+		Queue<DfaState> unmarkedStates = new LinkedList<>();
 
-        // Calcular cierre epsilon del estado inicial
-        Set<State> inicioCerradura = epsilonClosure(Set.of(nfa.startState));
-        DfaState inicioDFA = new DfaState(inicioCerradura);
-        // Marcar como final si corresponde
-        for (State nfaState : inicioCerradura) {
-            if (nfaState.isFinal) {
-                inicioDFA.setFinal(true);
-                break;
-            }
-        }
-        estadosDFA.add(inicioDFA);
-        cola.add(inicioDFA);
+		// 1. Initial DFA state: epsilon-closure of the NFA start state
+		Set<State> startNfaStates = epsilonClosure(Collections.singleton(nfa.getStartState()));
+		DfaState startDfaState = new DfaState(startNfaStates);
+		dfaStates.add(startDfaState);
+		unmarkedStates.add(startDfaState);
 
-        // Algoritmo de construcción por subconjuntos
-        while (!cola.isEmpty()) {
-            DfaState current = cola.poll();
-            for (char symbol : alphabet) {
-                Set<State> moverResultado = move(current.nfaStates, symbol);
-                Set<State> cerradura = epsilonClosure(moverResultado);
-            
-                if (!cerradura.isEmpty()) {
-                    DfaState existing = findDfaState(estadosDFA, cerradura);
-                    if (existing == null) {
-                        existing = new DfaState(cerradura);
-                        // Marcar como final si corresponde
-                        for (State nfaState : cerradura) {
-                            if (nfaState.isFinal) {
-                                existing.setFinal(true);
-                                break;
-                            }
-                        }
-                        estadosDFA.add(existing);
-                        cola.add(existing);
-                    }
-                    current.addTransition(symbol, existing);
-                }
-            }
-        }
-        return new DFA(inicioDFA, estadosDFA);
-    }
+		// 2. Process states
+		while (!unmarkedStates.isEmpty()) {
+			DfaState currentDfaState = unmarkedStates.poll();
+			for (Character c : alphabet) {
+				Set<State> nextNfaStates = move(currentDfaState.nfaStates, c);
+				Set<State> targetNfaStates = epsilonClosure(nextNfaStates);
+				if (targetNfaStates.isEmpty()) continue;
+				DfaState targetDfaState = findDfaState(dfaStates, targetNfaStates);
+				if (targetDfaState == null) {
+					targetDfaState = new DfaState(targetNfaStates);
+					dfaStates.add(targetDfaState);
+					unmarkedStates.add(targetDfaState);
+				}
+				currentDfaState.addTransition(c, targetDfaState);
+			}
+		}
+
+		// 3. Mark final states in the DFA and assign tokenTypeName
+		for (DfaState dfaState : dfaStates) {
+			String foundTokenTypeName = null;
+			int bestPriority = Integer.MAX_VALUE;
+			for (State nfaState : dfaState.nfaStates) {
+				if (nfaState.isFinal()) {
+					dfaState.isFinal = true;
+							if (nfaState.tokenTypeName != null && nfaState.priority <= bestPriority) {
+								bestPriority = nfaState.priority;
+								foundTokenTypeName = nfaState.tokenTypeName;
+							}
+				}
+			}
+			dfaState.tokenTypeName = foundTokenTypeName;
+		}
+
+		// 4. Return the constructed DFA
+		return new DFA(startDfaState, dfaStates);
+	}
 
 	/**
 	 * Computes the epsilon-closure of a set of NFA states.
@@ -84,20 +92,19 @@ public class NfaToDfaConverter {
 	 * @return The epsilon-closure of the input states.
 	 */
 	private static Set<State> epsilonClosure(Set<State> states) {
-	    Set<State> cerradura = new HashSet<>();
-        Stack<State> stack = new Stack<>();
-        stack.addAll(states);
-
-        while (!stack.isEmpty()) {
-            State s = stack.pop();
-            if (cerradura.add(s)) { // solo si no estaba antes
-                for (State target : s.getEpsilonTransitions()) {
-                    stack.push(target);
-                }
-            }
-        }
-        return cerradura;
-    }
+		Set<State> closure = new HashSet<>(states);
+		Stack<State> stack = new Stack<>();
+		stack.addAll(states);
+		while (!stack.isEmpty()) {
+			State state = stack.pop();
+			for (State next : state.getEpsilonTransitions()) {
+				if (closure.add(next)) {
+					stack.push(next);
+				}
+			}
+		}
+		return closure;
+	}
 
 	/**
 	 * Returns the set of states reachable from a set of NFA states by a given symbol.
@@ -107,12 +114,14 @@ public class NfaToDfaConverter {
 	 * @return The set of reachable states.
 	 */
 	private static Set<State> move(Set<State> states, char symbol) {
-	        Set<State> resultado = new HashSet<>();
-        for (State s : states) {
-            resultado.addAll(s.getTransitions(symbol));
-        }
-        return resultado;
-    }
+		Set<State> result = new HashSet<>();
+		for (State state : states) {
+			for (State next : state.getTransitions(symbol)) {
+				result.add(next);
+			}
+		}
+		return result;
+	}
 
 	/**
 	 * Finds an existing DFA state representing a given set of NFA states.
@@ -122,11 +131,11 @@ public class NfaToDfaConverter {
 	 * @return The matching DFA state, or null if not found.
 	 */
 	private static DfaState findDfaState(List<DfaState> dfaStates, Set<State> targetNfaStates) {
-	        for (DfaState dfa : dfaStates) {
-            if (dfa.nfaStates.equals(targetNfaStates)) {
- 			   return dfa;
+		for (DfaState dfaState : dfaStates) {
+			if (dfaState.nfaStates.equals(targetNfaStates)) {
+				return dfaState;
 			}
-        }
-        return null;
-    }
+		}
+		return null;
+	}
 }

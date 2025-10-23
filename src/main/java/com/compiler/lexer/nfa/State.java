@@ -39,6 +39,16 @@ public class State {
     public boolean isFinal;
 
     /**
+     * The token type name associated with this final state (null if not final).
+     */
+    public String tokenTypeName;
+    /**
+     * Priority of this final state when multiple final NFA states are present in a DFA state.
+     * Lower values mean higher priority. Defaults to Integer.MAX_VALUE (lowest priority).
+     */
+    public int priority = Integer.MAX_VALUE;
+
+    /**
      * Constructs a new state with a unique identifier and no transitions.
      * The state is not final by default.
      */
@@ -46,6 +56,7 @@ public class State {
         this.id = nextId++;
         this.transitions = new ArrayList<>();
         this.isFinal = false;
+        this.tokenTypeName = null;
     }
 
     /**
@@ -61,13 +72,33 @@ public class State {
      * @return a list of states reachable by epsilon transitions
      */
     public List<State> getEpsilonTransitions() {
-        List<State> resultado = new ArrayList<>();
+        List<State> result = new ArrayList<>();
         for (Transition t : transitions) {
             if (t.symbol == null) {
-                resultado.add(t.toState);
+                result.add(t.toState);
             }
         }
-        return resultado;
+        return result;
+    }
+
+    /**
+     * Sets this state as final and associates a token type name.
+     * @param tokenTypeName The token type name to associate with this state.
+     */
+    public void setFinal(String tokenTypeName) {
+        this.isFinal = true;
+        this.tokenTypeName = tokenTypeName;
+    }
+
+    /**
+     * Sets this state as final and assigns a priority for tie-breaking.
+     * @param tokenTypeName The token type name to associate with this state.
+     * @param priority Priority value (lower wins)
+     */
+    public void setFinal(String tokenTypeName, int priority) {
+        this.isFinal = true;
+        this.tokenTypeName = tokenTypeName;
+        this.priority = priority;
     }
 
     /**
@@ -76,12 +107,12 @@ public class State {
      * @return a list of states reachable by the given symbol
      */
     public List<State> getTransitions(char symbol) {
-        List<State> resultado = new ArrayList<>();
+        List<State> result = new ArrayList<>();
         for (Transition t : transitions) {
             if (t.symbol != null && t.symbol == symbol) {
-                resultado.add(t.toState);
+                result.add(t.toState);
             }
         }
-        return resultado;
+        return result;
     }
 }

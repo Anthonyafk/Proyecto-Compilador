@@ -17,15 +17,16 @@
 package com.compiler.lexer;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import com.compiler.lexer.dfa.DFA;
 import com.compiler.lexer.dfa.DfaState;
-import com.compiler.lexer.nfa.State;
 
 
 /**
@@ -38,9 +39,7 @@ public class DfaMinimizer {
     /**
      * Default constructor for DfaMinimizer.
      */
-        public DfaMinimizer() {
-            // TODO: Implement constructor if needed
-        }
+    public DfaMinimizer() {}
 
     /**
      * Minimizes a given DFA using the table-filling algorithm.
@@ -49,102 +48,102 @@ public class DfaMinimizer {
      * @param alphabet The set of input symbols.
      * @return A minimized DFA equivalent to the original.
      */
-        public static DFA minimizeDfa(DFA originalDfa, Set<Character> alphabet) {
-        List<DfaState> states = new ArrayList<>(originalDfa.allStates);
-        int n = states.size();
-        
-        // 1. Initialize distinguishability table
+    public static DFA minimizeDfa(DFA originalDfa, Set<Character> alphabet) {
+    // Step 1: Collect and sort all DFA states for consistent table ordering
+    List<DfaState> allStates = new ArrayList<>(originalDfa.allStates);
+    allStates.sort(Comparator.comparingInt(s -> s.id));
+
+        // Step 2: Initialize the table of state pairs
+        // Mark pairs as distinguishable if one is final and the other is not
         Map<Pair, Boolean> table = new HashMap<>();
-        for (int i = 0; i < n; i++) {
-            for (int j = i + 1; j < n; j++) {
-                DfaState s1 = states.get(i);
-                DfaState s2 = states.get(j);
-                table.put(new Pair(s1, s2), s1.isFinal != s2.isFinal);
+        for (int i = 0; i < allStates.size(); i++) {
+            for (int j = i + 1; j < allStates.size(); j++) {
+                DfaState s1 = allStates.get(i);
+                DfaState s2 = allStates.get(j);
+                Pair pair = new Pair(s1, s2);
+                table.put(pair, s1.isFinal() != s2.isFinal());
             }
         }
-        
-        // 2. Iteratively mark distinguishable pairs
-        boolean changed = true;
-        while (changed) {
+
+    /**
+     * --- PHASE 2: Iterative Marking of Distinguishable Pairs ---
+     * This loop goes through the table of state pairs and marks as distinguishable those pairs
+     * that meet any of the following conditions:
+     *   1. Both states have a transition for the same symbol, and their destinations are distinguishable.
+     *   2. Only one of the states has a transition for the symbol (the other does not).
+     * The process repeats until no more pairs are marked in an iteration.
+     */
+        boolean changed;
+        do {
             changed = false;
-            for (int i = 0; i < n; i++) {
-                for (int j = i + 1; j < n; j++) {
-                    DfaState s1 = states.get(i);
-                    DfaState s2 = states.get(j);
-                    Pair pair = new Pair(s1, s2);
-                    if (!table.get(pair)) {
-                        for (Character c : alphabet) {
-                            DfaState t1 = s1.transitions.get(c);
-                            DfaState t2 = s2.transitions.get(c);
-                            if ((t1 == null && t2 != null) || (t1 != null && t2 == null)) {
-                                table.put(pair, true);
-                                changed = true;
-                                break;
-                            }
-                            if (t1 != null && t2 != null) {
-                                Pair nextPair = new Pair(t1, t2);
-                                Boolean marked = table.get(nextPair);
-                                if (marked != null && marked) {
-                                    table.put(pair, true);
-                                    changed = true;
-                                    break;
+            for (Pair pair : table.keySet()) {
+                // Only process pairs not marked as distinguishable
+                if (!table.get(pair)) {
+                    DfaState s1 = pair.s1;
+                    DfaState s2 = pair.s2;
+                    for (char symbol : alphabet) {
+                        DfaState t1 = s1.getTransition(symbol);
+                        DfaState t2 = s2.getTransition(symbol);
+
+                        // Determine if the pair should be marked as distinguishable
+                        boolean areDistinguishable = false;
+                        if (t1 != null && t2 != null) {
+                            // Case 1: Both have transition, check if their destinations are distinguishable
+                            if (t1.id != t2.id) {
+                                Pair targetPair = new Pair(t1, t2);
+                                if (table.getOrDefault(targetPair, false)) {
+                                    areDistinguishable = true;
                                 }
                             }
+                        } else if (t1 != t2) {
+                            // Case 2: One has transition and the other does not (t1 is null and t2 is not, or vice versa)
+                            areDistinguishable = true;
+                        }
+
+                        // If the pair is found to be distinguishable, mark it and exit the loop
+                        if (areDistinguishable) {
+                            table.put(pair, true);
+                            changed = true;
+                            // Uncomment for debugging:
+                            // System.out.printf("Marking pair (%d, %d) by '%c'\n", s1.id, s2.id, symbol);
+                            break;
                         }
                     }
                 }
             }
-        }
-        
-        // 3. Create partitions using existing method
-        List<Set<DfaState>> partitions = createPartitions(states, table);
-        
-        // 4. Build state mapping and new states
-        Map<DfaState, DfaState> stateMapping = new HashMap<>();
-        Set<DfaState> newStates = new HashSet<>();
-        
+        } while (changed);
+
+        // Step 3: Partition states and build the minimized DFA
+        List<Set<DfaState>> partitions = createPartitions(allStates, table);
+
+        // Map old states to new minimized states
+        Map<DfaState, DfaState> oldToNewStateMap = new HashMap<>();
+        List<DfaState> minimizedStatesList = new ArrayList<>();
+
+        // Create new states for each partition
         for (Set<DfaState> partition : partitions) {
-            DfaState representative = partition.iterator().next();
-            Set<State> combinedNfaStates = new HashSet<>();
-            for (DfaState s : partition) {
-                combinedNfaStates.addAll(s.nfaStates);
-            }
-            DfaState newState = new DfaState(combinedNfaStates);
-            newState.isFinal = representative.isFinal;
-            newStates.add(newState);
-            
-            for (DfaState state : partition) {
-                stateMapping.put(state, newState);
+            DfaState newState = new DfaState(new HashSet<>());
+            // Mark as final if any state in the partition is final
+            newState.setFinal(partition.stream().anyMatch(DfaState::isFinal));
+            minimizedStatesList.add(newState);
+            for (DfaState oldState : partition) {
+                oldToNewStateMap.put(oldState, newState);
             }
         }
-        
-        // 5. Rebuild transitions
-        for (Set<DfaState> partition : partitions) {
-            DfaState representative = partition.iterator().next();
-            DfaState newState = stateMapping.get(representative);
-            
-            for (Character c : alphabet) {
-                DfaState target = representative.transitions.get(c);
-                if (target != null) {
-                    newState.transitions.put(c, stateMapping.get(target));
-                }
+
+        // Reconstruct transitions for minimized states
+        for (DfaState oldState : allStates) {
+            DfaState newState = oldToNewStateMap.get(oldState);
+            for (Map.Entry<Character, DfaState> entry : oldState.getTransitions().entrySet()) {
+                DfaState newTarget = oldToNewStateMap.get(entry.getValue());
+                newState.addTransition(entry.getKey(), newTarget);
             }
         }
-        
-        DfaState newStart = stateMapping.get(originalDfa.startState);
-        return new DFA(newStart, new ArrayList<>(newStates));
+
+        // Set the start state for the minimized DFA
+        DfaState minimizedStartState = oldToNewStateMap.get(originalDfa.startState);
+        return new DFA(minimizedStartState, minimizedStatesList);
     }
-    // TODO: Implement minimizeDfa
-    /*
-     Pseudocode:
-     1. Collect and sort all DFA states
-     2. Initialize table of state pairs; mark pairs as distinguishable if one is final and the other is not
-     3. Iteratively mark pairs as distinguishable if their transitions lead to distinguishable states or only one has a transition
-     4. Partition states into equivalence classes (using union-find)
-     5. Create new minimized states for each partition
-     6. Reconstruct transitions for minimized states
-     7. Set start state and return minimized DFA
-    */
 
     /**
      * Groups equivalent states into partitions using union-find.
@@ -153,38 +152,24 @@ public class DfaMinimizer {
      * @param table Table indicating which pairs are distinguishable.
      * @return List of partitions, each containing equivalent states.
      */
-        private static List<Set<DfaState>> createPartitions(List<DfaState> allStates, Map<Pair, Boolean> table) {
-        // 1. Initialize each state as its own parent (Union-Find initialization)
+    private static List<Set<DfaState>> createPartitions(List<DfaState> allStates, Map<Pair, Boolean> table) {
         Map<DfaState, DfaState> parent = new HashMap<>();
-        for (DfaState state : allStates) {
-            parent.put(state, state);
-        }
-        
-        // 2. For each pair not marked as distinguishable, union the states
-        int n = allStates.size();
-        for (int i = 0; i < n; i++) {
-            for (int j = i + 1; j < n; j++) {
-                DfaState s1 = allStates.get(i);
-                DfaState s2 = allStates.get(j);
-                Pair pair = new Pair(s1, s2);
-                
-                // If the pair is not marked as distinguishable (equivalent states)
-                Boolean isDistinguishable = table.get(pair);
-                if (isDistinguishable == null || !isDistinguishable) {
-                    union(parent, s1, s2);
-                }
+        for (DfaState state : allStates) parent.put(state, state);
+
+        // Merge states that are not distinguishable
+        for (Pair pair : table.keySet()) {
+            if (!table.get(pair)) {
+                union(parent, pair.s1, pair.s2);
             }
         }
-        
-        // 3. Group states by their root parent
-        Map<DfaState, Set<DfaState>> partitionMap = new HashMap<>();
+
+        // Group states by their root parent
+        Map<DfaState, Set<DfaState>> groups = new HashMap<>();
         for (DfaState state : allStates) {
             DfaState root = find(parent, state);
-            partitionMap.computeIfAbsent(root, k -> new HashSet<>()).add(state);
+            groups.computeIfAbsent(root, k -> new HashSet<>()).add(state);
         }
-        
-        // 4. Return list of partitions
-        return new ArrayList<>(partitionMap.values());
+        return new ArrayList<>(groups.values());
     }
 
     /**
@@ -196,9 +181,8 @@ public class DfaMinimizer {
      * @return Root parent of the state.
      */
     private static DfaState find(Map<DfaState, DfaState> parent, DfaState state) {
-    if (parent.get(state) != state) {
-            parent.put(state, find(parent, parent.get(state)));
-        }
+        if (parent.get(state) == state) return state;
+        parent.put(state, find(parent, parent.get(state)));
         return parent.get(state);
     }
 
@@ -210,10 +194,10 @@ public class DfaMinimizer {
      * @param s2 Second state.
      */
     private static void union(Map<DfaState, DfaState> parent, DfaState s1, DfaState s2) {
-        DfaState r1 = find(parent, s1);
-        DfaState r2 = find(parent, s2);
-        if (r1 != r2) {
-            parent.put(r2, r1);
+        DfaState root1 = find(parent, s1);
+        DfaState root2 = find(parent, s2);
+        if (root1.id != root2.id) {
+            parent.put(root2, root1);
         }
     }
 
@@ -224,8 +208,14 @@ public class DfaMinimizer {
     private static class Pair {
         final DfaState s1;
         final DfaState s2;
+
+        /**
+         * Constructs a pair in canonical order (lowest id first).
+         * @param s1 First state.
+         * @param s2 Second state.
+         */
         public Pair(DfaState s1, DfaState s2) {
-            if (s1.id <= s2.id) {
+            if (s1.id < s2.id) {
                 this.s1 = s1;
                 this.s2 = s2;
             } else {
@@ -237,16 +227,14 @@ public class DfaMinimizer {
         @Override
         public boolean equals(Object o) {
             if (this == o) return true;
-            if (!(o instanceof Pair)) return false;
-            Pair p = (Pair) o;
-            return s1.id == p.s1.id && s2.id == p.s2.id;
+            if (o == null || getClass() != o.getClass()) return false;
+            Pair pair = (Pair) o;
+            return s1.id == pair.s1.id && s2.id == pair.s2.id;
         }
 
         @Override
         public int hashCode() {
-            int result = Integer.hashCode(s1.id);
-            result = 31 * result + Integer.hashCode(s2.id);
-            return result;
+            return Objects.hash(s1.id, s2.id);
         }
     }
 }

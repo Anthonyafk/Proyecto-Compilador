@@ -1,9 +1,9 @@
 package com.compiler.lexer.regex;
 
 import java.util.Stack;
-import com.compiler.lexer.nfa.State;
+
 import com.compiler.lexer.nfa.NFA;
-import com.compiler.lexer.nfa.Transition;
+import com.compiler.lexer.nfa.State;
 
 /**
  * RegexParser
@@ -31,9 +31,7 @@ public class RegexParser {
     /**
      * Default constructor for RegexParser.
      */
-        public RegexParser() {
-            // TODO: Implement constructor if needed
-        }
+    public RegexParser() {}
 
     /**
      * Converts an infix regular expression to an NFA.
@@ -42,8 +40,10 @@ public class RegexParser {
      * @return The constructed NFA.
      */
     public NFA parse(String infixRegex) {
-        String posfijo = ShuntingYard.toPostfix(infixRegex);
-        return buildNfaFromPostfix(posfijo);
+        // Step 1: Convert to postfix using Shunting Yard
+        String postfixRegex = ShuntingYard.toPostfix(infixRegex);
+        // Step 2: Build the NFA from the postfix expression
+        return buildNfaFromPostfix(postfixRegex);
     }
 
     /**
@@ -52,29 +52,29 @@ public class RegexParser {
      * @param postfixRegex The regular expression in postfix notation.
      * @return The constructed NFA.
      */
-    
     private NFA buildNfaFromPostfix(String postfixRegex) {
-    Stack<NFA> pila = new Stack<>();
+        Stack<NFA> nfaStack = new Stack<>();
 
-        for (char token : postfixRegex.toCharArray()) {
-            if (isOperand(token)) {
-                pila.push(createNfaForCharacter(token));
-            } else {
-                switch (token) {
-                    case '·' -> handleConcatenation(pila);
-                    case '|' -> handleUnion(pila);
-                    case '*' -> handleKleeneStar(pila);
-                    case '+' -> handlePlus(pila);
-                    case '?' -> handleOptional(pila);
-                    default -> throw new IllegalArgumentException("Operador desconocido: " + token);
-                }
+        for (char c : postfixRegex.toCharArray()) {
+            if (isOperand(c)) {
+                NFA nfa = createNfaForCharacter(c);
+                nfaStack.push(nfa);
+            } else if (c == '·') {
+                handleConcatenation(nfaStack);
+            } else if (c == '|') {
+                handleUnion(nfaStack);
+            } else if (c == '*') {
+                handleKleeneStar(nfaStack);
+            } else if (c == '?') {
+                handleOptional(nfaStack);
+            } else if (c == '+') {
+                handlePlus(nfaStack);
             }
         }
 
-        if (pila.size() != 1) {
-            throw new IllegalStateException("Expresión de sufijo no válida");
-        }
-        return pila.pop();
+        NFA result = nfaStack.pop();
+        result.endState.isFinal = true;
+        return result;
     }
 
     /**
@@ -83,23 +83,15 @@ public class RegexParser {
      * @param stack The NFA stack.
      */
     private void handleOptional(Stack<NFA> stack) {
-        if (stack.isEmpty()) {
-            throw new IllegalStateException("El operador opcional requiere un NFA");
-        }
-
-        NFA interno = stack.pop();
-        State estadoInicial = new State();
-        State estadoFinal = new State();
-        estadoFinal.isFinal = true;
-
-        // Zero occurrences
-        estadoInicial.transitions.add(new Transition(null, estadoFinal));
-        // One occurrence
-        estadoInicial.transitions.add(new Transition(null, interno.startState));
-        interno.endState.transitions.add(new Transition(null, estadoFinal));
-        interno.endState.isFinal = false;
-
-        stack.push(new NFA(estadoInicial, estadoFinal));
+        NFA nfa = stack.pop();
+        State start = new State();
+        State end = new State();
+        start.transitions.add(new com.compiler.lexer.nfa.Transition(null, nfa.startState));
+        start.transitions.add(new com.compiler.lexer.nfa.Transition(null, end));
+        nfa.endState.isFinal = false;
+        nfa.endState.transitions.add(new com.compiler.lexer.nfa.Transition(null, end));
+        end.isFinal = true;
+        stack.push(new NFA(start, end));
     }
 
     /**
@@ -108,23 +100,15 @@ public class RegexParser {
      * @param stack The NFA stack.
      */
     private void handlePlus(Stack<NFA> stack) {
-         if (stack.isEmpty()) {
-            throw new IllegalStateException("Plus operator requires one NFA");
-        }
-
-        NFA interno = stack.pop();
-        State estadoInicial = new State();
-        State estadoFinal = new State();
-        estadoFinal.isFinal = true;
-
-        // First occurrence
-        estadoInicial.transitions.add(new Transition(null, interno.startState));
-        // Repetition and end
-        interno.endState.transitions.add(new Transition(null, interno.startState));
-        interno.endState.transitions.add(new Transition(null, estadoFinal));
-        interno.endState.isFinal = false;
-
-        stack.push(new NFA(estadoInicial, estadoFinal));
+        NFA nfa = stack.pop();
+        State start = new State();
+        State end = new State();
+        start.transitions.add(new com.compiler.lexer.nfa.Transition(null, nfa.startState));
+        nfa.endState.isFinal = false;
+        nfa.endState.transitions.add(new com.compiler.lexer.nfa.Transition(null, nfa.startState));
+        nfa.endState.transitions.add(new com.compiler.lexer.nfa.Transition(null, end));
+        end.isFinal = true;
+        stack.push(new NFA(start, end));
     }
     
     /**
@@ -133,12 +117,11 @@ public class RegexParser {
      * @return The constructed NFA.
      */
     private NFA createNfaForCharacter(char c) {
-        State estadoInicial = new State();
-        State estadoFinal = new State();
-        estadoFinal.isFinal = true;
-
-        estadoInicial.transitions.add(new Transition(c, estadoFinal));
-        return new NFA(estadoInicial, estadoFinal);
+        State start = new State();
+        State end = new State();
+        start.transitions.add(new com.compiler.lexer.nfa.Transition(c, end));
+        end.isFinal = true;
+        return new NFA(start, end);
     }
 
     /**
@@ -147,17 +130,12 @@ public class RegexParser {
      * @param stack The NFA stack.
      */
     private void handleConcatenation(Stack<NFA> stack) {
-        if (stack.size() < 2) {
-            throw new IllegalStateException("Concatenation requires two NFAs");
-        }
-
-        NFA derecho = stack.pop();
-        NFA izquierdo = stack.pop();
-
-        izquierdo.endState.transitions.add(new Transition(null, derecho.startState));
-        izquierdo.endState.isFinal = false;
-
-        stack.push(new NFA(izquierdo.startState, derecho.endState));
+        NFA nfa2 = stack.pop();
+        NFA nfa1 = stack.pop();
+        nfa1.endState.isFinal = false;
+        nfa1.endState.transitions.add(new com.compiler.lexer.nfa.Transition(null, nfa2.startState));
+        nfa2.endState.isFinal = true;
+        stack.push(new NFA(nfa1.startState, nfa2.endState));
     }
 
     /**
@@ -166,28 +144,18 @@ public class RegexParser {
      * @param stack The NFA stack.
      */
     private void handleUnion(Stack<NFA> stack) {
-        if (stack.size() < 2) {
-            throw new IllegalStateException("Union requires two NFAs");
-        }
-
-        NFA derecho = stack.pop();
-        NFA izquierdo = stack.pop();
-
-        State estadoInicial = new State();
-        State estadoFinal = new State();
-        estadoFinal.isFinal = true;
-
-        // Empieza merge
-        estadoInicial.transitions.add(new Transition(null, izquierdo.startState));
-        estadoInicial.transitions.add(new Transition(null, derecho.startState));
-
-        // Merge termina
-        izquierdo.endState.transitions.add(new Transition(null, estadoFinal));
-        derecho.endState.transitions.add(new Transition(null, estadoFinal));
-        izquierdo.endState.isFinal = false;
-        derecho.endState.isFinal = false;
-
-        stack.push(new NFA(estadoInicial, estadoFinal));
+        NFA nfa2 = stack.pop();
+        NFA nfa1 = stack.pop();
+        State start = new State();
+        State end = new State();
+        start.transitions.add(new com.compiler.lexer.nfa.Transition(null, nfa1.startState));
+        start.transitions.add(new com.compiler.lexer.nfa.Transition(null, nfa2.startState));
+        nfa1.endState.isFinal = false;
+        nfa2.endState.isFinal = false;
+        nfa1.endState.transitions.add(new com.compiler.lexer.nfa.Transition(null, end));
+        nfa2.endState.transitions.add(new com.compiler.lexer.nfa.Transition(null, end));
+        end.isFinal = true;
+        stack.push(new NFA(start, end));
     }
 
     /**
@@ -196,24 +164,16 @@ public class RegexParser {
      * @param stack The NFA stack.
      */
     private void handleKleeneStar(Stack<NFA> stack) {
-        if (stack.isEmpty()) {
-            throw new IllegalStateException("Kleene star requires one NFA");
-        }
-
-        NFA interno = stack.pop();
-        State estadoInicial = new State();
-        State estadoFinal = new State();
-        estadoFinal.isFinal = true;
-
-        // cero repeticiones
-        estadoInicial.transitions.add(new Transition(null, estadoFinal));
-        // una o más repeticiones
-        estadoInicial.transitions.add(new Transition(null, interno.startState));
-        interno.endState.transitions.add(new Transition(null, interno.startState));
-        interno.endState.transitions.add(new Transition(null, estadoFinal));
-        interno.endState.isFinal = false;
-
-        stack.push(new NFA(estadoInicial, estadoFinal));
+        NFA nfa = stack.pop();
+        State start = new State();
+        State end = new State();
+        start.transitions.add(new com.compiler.lexer.nfa.Transition(null, nfa.startState));
+        start.transitions.add(new com.compiler.lexer.nfa.Transition(null, end));
+        nfa.endState.isFinal = false;
+        nfa.endState.transitions.add(new com.compiler.lexer.nfa.Transition(null, nfa.startState));
+        nfa.endState.transitions.add(new com.compiler.lexer.nfa.Transition(null, end));
+        end.isFinal = true;
+        stack.push(new NFA(start, end));
     }
 
     /**
@@ -222,6 +182,6 @@ public class RegexParser {
      * @return True if the character is an operand, false if it is an operator.
      */
     private boolean isOperand(char c) {
-    return !String.valueOf(c).matches("[|*?+()·]");
+        return c != '·' && c != '|' && c != '*' && c != '?' && c != '+';
     }
 }

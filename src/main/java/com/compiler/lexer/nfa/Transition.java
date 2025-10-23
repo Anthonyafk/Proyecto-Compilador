@@ -28,5 +28,5 @@ public class Transition {
     public Transition(Character symbol, State toState) {
         this.symbol = symbol;
         this.toState = toState;
- }
+    }
 }

@@ -1,6 +1,7 @@
 package com.compiler.lexer;
 
 import com.compiler.lexer.dfa.DFA;
+import com.compiler.lexer.dfa.DfaState;
 
 /**
  * DfaSimulator
@@ -25,9 +26,7 @@ public class DfaSimulator {
     /**
      * Default constructor for DfaSimulator.
      */
-        public DfaSimulator() {
-            // TODO: Implement constructor if needed
-        }
+    public DfaSimulator() {}
     /**
      * Simulates the DFA on the given input string.
      * Starts at the DFA's start state and processes each character, following transitions.
@@ -38,14 +37,19 @@ public class DfaSimulator {
      * @return True if the input is accepted by the DFA, false otherwise.
      */
     public boolean simulate(DFA dfa, String input) {
-        var currentState = dfa.startState;
-        for (char symbol : input.toCharArray()) {
-            var nextState = currentState.getTransition(symbol);
-            if (nextState == null) {
-                return false; // No valid transition, reject input
+        DfaState currentState = dfa.startState;
+
+        for (char c : input.toCharArray()) {
+            // Get the next state based on the current character
+            currentState = currentState.transitions.get(c);
+
+            // If there is no transition for the character, the string is rejected
+            if (currentState == null) {
+                return false;
             }
-            currentState = nextState;
         }
-        return currentState.isFinal(); // Accept if in a final state
+
+        // The string is accepted if the final state is an accepting state
+        return currentState.isFinal;
     }
 }
