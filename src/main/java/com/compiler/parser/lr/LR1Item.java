@@ -25,11 +25,10 @@ public class LR1Item {
      * Returns the symbol after the dot, or null if the dot is at the end.
      */
     public Symbol getSymbolAfterDot() {
-        // TODO: Implement the logic to get the symbol after the dot.
-        // 1. Check if the dotPosition is within the bounds of the production's right-hand side list.
-        // 2. If it is (i.e., dotPosition < production.right.size()), return the symbol at that index.
-        // 3. Otherwise, the dot is at the end, so return null.
-        return null; // Placeholder
+        if (dotPosition < production.right.size()) {
+            return production.right.get(dotPosition);
+        }
+        return null;
     }
 
     @Override

@@ -40,55 +40,135 @@ public class LALR1Table {
      * Builds the LALR(1) parsing table.
      */
     public void build() {
-        // TODO: Implement the LALR(1) table construction logic.
-        // This is a multi-step process.
-        
-        // Step 1: Ensure the underlying LR(1) automaton is built.
-        // automaton.build();
+        // Build LALR(1) states by merging LR(1) states that share the same kernel
+        automaton.build();
 
-        // Step 2: Merge LR(1) states to create LALR(1) states.
-        //  a. Group LR(1) states that have the same "kernel" (the set of LR(0) items).
-        //     - A kernel item is an LR(1) item without its lookahead.
-        //     - Create a map from a kernel (Set<KernelEntry>) to a list of state IDs that share that kernel.
-        //  b. For each group of states with the same kernel:
-        //     - Create a single new LALR(1) state.
-        //     - This new state is formed by merging the LR(1) items from all states in the group.
-        //     - Merging means for each kernel item, the new lookahead set is the union of all lookaheads for that item across the group.
-        //     - Store these new LALR states in `lalrStates`.
-        //  c. Create a mapping from old LR(1) state IDs to new LALR(1) state IDs.
+        java.util.List<java.util.Set<LR1Item>> lr1States = automaton.getStates();
+        java.util.Map<Integer, java.util.Map<com.compiler.parser.grammar.Symbol, Integer>> lr1Transitions = automaton.getTransitions();
 
-        // Step 3: Build the transitions for the new LALR(1) automaton.
-        //  - For each transition in the original LR(1) automaton `s -X-> t`:
-        //  - Add a new transition for the LALR automaton: `merged(s) -X-> merged(t)`.
-        //  - Use the mapping from step 2c to find the merged state IDs.
-        //  - Store these new transitions in `lalrTransitions`.
+        // (removed debug-only code that printed LR(1) transitions)
 
-        // Step 4: Fill the ACTION and GOTO tables based on the LALR automaton.
-        //  - Call a helper method, e.g., `fillActionGoto()`.
+        // 1) Group LR(1) states by kernel (set of KernelEntry)
+        java.util.Map<java.util.Set<KernelEntry>, java.util.List<Integer>> kernelToStates = new java.util.HashMap<>();
+        for (int i = 0; i < lr1States.size(); i++) {
+            java.util.Set<KernelEntry> kernel = new java.util.HashSet<>();
+            for (LR1Item it : lr1States.get(i)) {
+                kernel.add(new KernelEntry(it.production, it.dotPosition));
+            }
+            kernelToStates.computeIfAbsent(kernel, k -> new java.util.ArrayList<>()).add(i);
+        }
+
+        // 2) For each kernel group, create a merged LALR state and map old LR1 indices
+        lalrStates = new java.util.ArrayList<>();
+        java.util.Map<Integer, Integer> lr1ToLalr = new java.util.HashMap<>();
+
+        for (java.util.List<Integer> group : kernelToStates.values()) {
+            java.util.Set<LR1Item> merged = new java.util.HashSet<>();
+            for (int idx : group) {
+                merged.addAll(lr1States.get(idx));
+            }
+            int newIndex = lalrStates.size();
+            for (int idx : group) lr1ToLalr.put(idx, newIndex);
+            lalrStates.add(merged);
+        }
+
+        // 3) Rebuild transitions: merged(s_lr1) -X-> merged(t_lr1)
+        lalrTransitions = new java.util.HashMap<>();
+        for (java.util.Map.Entry<Integer, java.util.Map<com.compiler.parser.grammar.Symbol, Integer>> e : lr1Transitions.entrySet()) {
+            int s_lr1 = e.getKey();
+            Integer s_lalr = lr1ToLalr.get(s_lr1);
+            if (s_lalr == null) continue;
+            for (java.util.Map.Entry<com.compiler.parser.grammar.Symbol, Integer> tr : e.getValue().entrySet()) {
+                com.compiler.parser.grammar.Symbol X = tr.getKey();
+                int t_lr1 = tr.getValue();
+                Integer t_lalr = lr1ToLalr.get(t_lr1);
+                if (t_lalr == null) continue;
+                lalrTransitions.computeIfAbsent(s_lalr, k -> new java.util.HashMap<>()).put(X, t_lalr);
+            }
+        }
+
+        // 4) initial state is the merged state that contains LR1 state 0
+        initialState = lr1ToLalr.getOrDefault(0, 0);
+
+        // 5) Fill ACTION and GOTO tables
+        fillActionGoto();
+
+        // tables are built; no debug printing here to keep output clean
     }
 
     private void fillActionGoto() {
-        // TODO: Populate the ACTION and GOTO tables based on the LALR states and transitions.
-        // 1. Clear the action, gotoTable, and conflicts lists.
-        // 2. Iterate through each LALR state `s` from 0 to lalrStates.size() - 1.
-        // 3. For each state `s`, iterate through its LR1Item `it`.
-        //    a. Get the symbol after the dot, `X = it.getSymbolAfterDot()`.
-        //    b. If `X` is a terminal (SHIFT action):
-        //       - Find the destination state `t` from `lalrTransitions.get(s).get(X)`.
-        //       - Check for conflicts: if action table already has an entry for `[s, X]`, it's a conflict.
-        //       - Otherwise, set `action[s][X] = SHIFT(t)`.
-        //    c. If the dot is at the end of the production (`X` is null) (REDUCE or ACCEPT action):
-        //       - This is an item like `[A -> α •, a]`.
-        //       - If it's the augmented start production (`S' -> S •`) and lookahead is `$`, this is an ACCEPT action.
-        //         - Set `action[s][$] = ACCEPT`.
-        //       - Otherwise, it's a REDUCE action.
-        //         - For the lookahead symbol `a` in the item:
-        //         - Check for conflicts: if `action[s][a]` is already filled, report a Shift/Reduce or Reduce/Reduce conflict.
-        //         - Otherwise, set `action[s][a] = REDUCE(A -> α)`.
-        // 4. Populate the GOTO table.
-        //    - For each state `s`, look at its transitions in `lalrTransitions`.
-        //    - For each transition on a NON-TERMINAL symbol `B` to state `t`:
-        //    - Set `gotoTable[s][B] = t`.
+        // 1. Clear tables
+        action.clear();
+        gotoTable.clear();
+        conflicts.clear();
+
+    // helpers
+    String augmentedStartName = automaton.getAugmentedLeftName();
+    com.compiler.parser.grammar.Symbol eof = new com.compiler.parser.grammar.Symbol("$", com.compiler.parser.grammar.SymbolType.TERMINAL);
+
+        // iterate states
+        for (int s = 0; s < lalrStates.size(); s++) {
+            action.put(s, new java.util.HashMap<>());
+            gotoTable.put(s, new java.util.HashMap<>());
+
+            // populate GOTO entries from transitions
+            if (lalrTransitions.containsKey(s)) {
+                for (java.util.Map.Entry<com.compiler.parser.grammar.Symbol, Integer> trans : lalrTransitions.get(s).entrySet()) {
+                    com.compiler.parser.grammar.Symbol B = trans.getKey();
+                    int t = trans.getValue();
+                    if (B.type == com.compiler.parser.grammar.SymbolType.NON_TERMINAL) {
+                        gotoTable.get(s).put(B, t);
+                    }
+                }
+            }
+
+            // for each LR1 item in this state
+            for (LR1Item it : lalrStates.get(s)) {
+                com.compiler.parser.grammar.Symbol X = it.getSymbolAfterDot();
+                // SHIFT on terminal
+                if (X != null && X.type == com.compiler.parser.grammar.SymbolType.TERMINAL) {
+                    Integer t = lalrTransitions.getOrDefault(s, java.util.Collections.emptyMap()).get(X);
+                    if (t == null) continue;
+                    Action newAction = Action.shift(t);
+                    if (action.get(s).containsKey(X)) {
+                        Action existing = action.get(s).get(X);
+                        if (existing.type == Action.Type.REDUCE) {
+                            conflicts.add(String.format("Shift/Reduce conflict in state %d on %s: SHIFT %d vs REDUCE %s", s, X.name, t, existing.reduceProd));
+                        }
+                    } else {
+                        action.get(s).put(X, newAction);
+                    }
+                }
+
+                // REDUCE or ACCEPT when dot at end
+                else if (X == null) {
+                    Action newAction;
+                    if (it.production.left.name.equals(augmentedStartName)) {
+                        if (it.lookahead.equals(eof)) {
+                            newAction = Action.accept();
+                        } else {
+                            continue;
+                        }
+                    } else {
+                        newAction = Action.reduce(it.production);
+                    }
+
+                    com.compiler.parser.grammar.Symbol a = it.lookahead;
+                    if (action.get(s).containsKey(a)) {
+                        Action existing = action.get(s).get(a);
+                        if (existing.type == Action.Type.SHIFT) {
+                            conflicts.add(String.format("Shift/Reduce conflict in state %d on %s: REDUCE %s vs SHIFT %d", s, a.name, it.production, existing.state));
+                        } else if (existing.type == Action.Type.REDUCE) {
+                            if (!existing.reduceProd.equals(it.production)) {
+                                conflicts.add(String.format("Reduce/Reduce conflict in state %d on %s: REDUCE %s vs REDUCE %s", s, a.name, it.production, existing.reduceProd));
+                            }
+                        }
+                    } else {
+                        action.get(s).put(a, newAction);
+                    }
+                }
+            }
+        }
     }
     
     // ... (Getters and KernelEntry class can remain as is)

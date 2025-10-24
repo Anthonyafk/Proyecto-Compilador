@@ -27,27 +27,50 @@ public class LALR1Parser {
     * @return true if the sequence is accepted, false if a syntax error is found.
     */
    public boolean parse(List<Token> tokens) {
-        // TODO: Implement the LALR(1) parsing algorithm.
-        // 1. Initialize a stack for states and push the initial state (from table.getInitialState()).
-        // 2. Create a mutable list of input tokens from the parameter and add the end-of-input token ("$").
-        // 3. Initialize an instruction pointer `ip` to 0, pointing to the first token.
-        // 4. Start a loop that runs until an ACCEPT or ERROR condition is met.
-        //    a. Get the current state from the top of the stack.
-        //    b. Get the current token `a` from the input list at index `ip`.
-        //    c. Look up the action in the ACTION table: action = table.getActionTable()[state][a.type].
-        //    d. If no action is found (it's null), it's a syntax error. Return false.
-        //    e. If the action is SHIFT(s'):
-        //       i. Push the new state s' onto the stack.
-        //       ii. Advance the input pointer: ip++.
-        //    f. If the action is REDUCE(A -> β):
-        //       i. Pop |β| symbols (and states) from the stack. Handle epsilon productions (where |β|=0).
-        //       ii. Get the new state `s` from the top of the stack.
-        //       iii. Look up the GOTO state: goto_state = table.getGotoTable()[s][A].
-        //       iv. If no GOTO state is found, it's an error. Return false.
-        //       v. Push the goto_state onto the stack.
-        //    g. If the action is ACCEPT:
-        //       i. The input has been parsed successfully. Return true.
-        //    h. If the action is none of the above, it's an unhandled case or error. Return false.
-        return false; // Placeholder
+        java.util.Stack<Integer> stack = new java.util.Stack<>();
+        stack.push(table.getInitialState());
+
+        java.util.List<Token> input = new java.util.ArrayList<>(tokens);
+        // append EOF token
+        input.add(new Token("$", "$"));
+
+        int ip = 0;
+
+        while (true) {
+            int state = stack.peek();
+            Token aTok = input.get(ip);
+
+            // map token type (string) to a grammar terminal Symbol by name
+            com.compiler.parser.grammar.Symbol aSym = new com.compiler.parser.grammar.Symbol(aTok.type, com.compiler.parser.grammar.SymbolType.TERMINAL);
+
+            LALR1Table.Action action = null;
+            java.util.Map<com.compiler.parser.grammar.Symbol, LALR1Table.Action> row = table.getActionTable().get(state);
+            if (row != null) action = row.get(aSym);
+
+            if (action == null) {
+                return false; // syntax error
+            }
+
+            if (action.type == LALR1Table.Action.Type.SHIFT) {
+                stack.push(action.state);
+                ip++;
+                continue;
+            } else if (action.type == LALR1Table.Action.Type.REDUCE) {
+                com.compiler.parser.grammar.Production prod = action.reduceProd;
+                int betaLength = prod.right.size();
+                for (int i = 0; i < betaLength; i++) stack.pop();
+                int s = stack.peek();
+                Integer goto_state = null;
+                java.util.Map<com.compiler.parser.grammar.Symbol, Integer> grow = table.getGotoTable().get(s);
+                if (grow != null) goto_state = grow.get(prod.left);
+                if (goto_state == null) return false;
+                stack.push(goto_state);
+                continue;
+            } else if (action.type == LALR1Table.Action.Type.ACCEPT) {
+                return true;
+            } else {
+                return false;
+            }
+        }
    }
 }
