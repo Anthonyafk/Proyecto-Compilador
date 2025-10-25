@@ -48,6 +48,8 @@ public class LALR1Parser {
             if (row != null) action = row.get(aSym);
 
             if (action == null) {
+                // Detailed error reporting (optional challenge)
+                reportSyntaxError(state, aTok, row);
                 return false; // syntax error
             }
 
@@ -72,5 +74,47 @@ public class LALR1Parser {
                 return false;
             }
         }
+   }
+
+   /**
+    * Reports a detailed syntax error message (optional challenge implementation).
+    * Shows what token was found and what tokens were expected at the current state.
+    * 
+    * @param state The current parser state where the error occurred
+    * @param foundToken The token that was encountered
+    * @param actionRow The ACTION table row for the current state (may be null)
+    */
+   private void reportSyntaxError(int state, Token foundToken, 
+                                   java.util.Map<com.compiler.parser.grammar.Symbol, LALR1Table.Action> actionRow) {
+       StringBuilder expected = new StringBuilder();
+       
+       // Collect all valid tokens from the ACTION table for this state
+       if (actionRow != null && !actionRow.isEmpty()) {
+           java.util.List<String> validTokens = new java.util.ArrayList<>();
+           for (com.compiler.parser.grammar.Symbol sym : actionRow.keySet()) {
+               validTokens.add("'" + sym.name + "'");
+           }
+           
+           if (validTokens.size() == 1) {
+               expected.append(validTokens.get(0));
+           } else if (validTokens.size() == 2) {
+               expected.append(validTokens.get(0)).append(" o ").append(validTokens.get(1));
+           } else {
+               for (int i = 0; i < validTokens.size(); i++) {
+                   if (i == validTokens.size() - 1) {
+                       expected.append(" o ").append(validTokens.get(i));
+                   } else {
+                       expected.append(validTokens.get(i));
+                       if (i < validTokens.size() - 2) expected.append(", ");
+                   }
+               }
+           }
+       } else {
+           expected.append("(ningún token válido)");
+       }
+       
+       System.err.println("Error de sintaxis en estado " + state + ":");
+       System.err.println("  Se esperaba: " + expected.toString());
+       System.err.println("  Se encontró: '" + foundToken.type + "'");
    }
 }
